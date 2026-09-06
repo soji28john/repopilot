@@ -39,3 +39,7 @@ tmp/
 
 # Docker
 docker-data/
+
+# Secrets
+secrets/
+.env
