@@ -16,6 +16,9 @@ dependencies = [
     "alembic",
     "pydantic-settings>=2.15.0",
     "psycopg[binary]>=3.3.5",
+    "pyjwt>=2.13.0",
+    "cryptography>=50.0.1",
+    "httpx>=0.28.1",
 ]
 [project.optional-dependencies]
 dev = [

@@ -12,6 +12,11 @@ class Settings(BaseSettings):
 
     llm_provider: str | None = None
     llm_api_key: str | None = None
+    
+    github_app_id: str
+    github_client_id: str
+    github_private_key_path: str
+    github_installation_id: int
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -22,4 +27,9 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore[call-arg]
+
+
+
+
+
