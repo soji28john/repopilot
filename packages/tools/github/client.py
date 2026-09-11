@@ -79,5 +79,62 @@ class GitHubClient:
             )
 
             response.raise_for_status()
-
+    
             return response.json()
+    async def get_repository_tree(
+        self,
+        owner: str,
+        repo: str,
+        branch: str,
+    ) -> list[dict[str, Any]]:
+        """Return the repository file tree."""
+
+        token = await self.create_installation_token()
+
+        async with httpx.AsyncClient(
+            base_url=self.BASE_URL,
+            timeout=30.0,
+        ) as client:
+            response = await client.get(
+                f"/repos/{owner}/{repo}/git/trees/{branch}",
+                headers=self._headers(token),
+                params={"recursive": "1"},
+            )
+
+            response.raise_for_status()
+
+            data = response.json()
+
+            return data["tree"]
+
+    async def get_file_content(
+        self,
+        owner: str,
+        repo: str,
+        path: str,
+        ref: str,
+    ) -> str:
+        """Return decoded text content for a repository file."""
+
+        import base64
+
+        token = await self.create_installation_token()
+
+        async with httpx.AsyncClient(
+            base_url=self.BASE_URL,
+            timeout=30.0,
+        ) as client:
+            response = await client.get(
+                f"/repos/{owner}/{repo}/contents/{path}",
+                headers=self._headers(token),
+                params={"ref": ref},
+            )
+
+            response.raise_for_status()
+
+            data = response.json()
+            content = data["content"]
+
+            decoded = base64.b64decode(content)
+
+            return decoded.decode("utf-8")
