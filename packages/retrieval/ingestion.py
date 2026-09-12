@@ -16,6 +16,13 @@ class RepositoryIngestor:
         ".pytest_cache",
         ".mypy_cache",
         ".ruff_cache",
+        "dist",
+        "build",
+        "coverage",
+        ".next",
+        ".tox",
+        "vendor",
+        "target",
     }
 
     SUPPORTED_EXTENSIONS: ClassVar[set[str]] = {
@@ -39,13 +46,19 @@ class RepositoryIngestor:
         ".toml",
     }
 
+    MAX_FILE_SIZE: ClassVar[int] = 1_000_000
+
     def __init__(
         self,
         github_client: GitHubClient | None = None,
     ) -> None:
         self.github_client = github_client or GitHubClient()
 
-    def should_include(self, path: str) -> bool:
+    def should_include(
+        self,
+        path: str,
+        size: int | None = None,
+    ) -> bool:
         """Determine whether a repository path should be ingested."""
 
         parts = path.split("/")
@@ -63,7 +76,10 @@ class RepositoryIngestor:
 
         extension = "." + filename.rsplit(".", 1)[-1].lower()
 
-        return extension in self.SUPPORTED_EXTENSIONS
+        if extension not in self.SUPPORTED_EXTENSIONS:
+            return False
+
+        return size is None or size <= self.MAX_FILE_SIZE
 
     async def ingest(
         self,
@@ -87,7 +103,10 @@ class RepositoryIngestor:
 
             path = entry["path"]
 
-            if not self.should_include(path):
+            if not self.should_include(
+                path,
+                entry.get("size"),
+            ):
                 continue
 
             content = await self.github_client.get_file_content(
@@ -101,7 +120,7 @@ class RepositoryIngestor:
                 RepositoryFile(
                     path=path,
                     content=content,
-                    size=len(content.encode("utf-8")),
+                    size=len(content.encode()),
                 )
             )
 
